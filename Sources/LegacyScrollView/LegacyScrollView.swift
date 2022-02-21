@@ -10,23 +10,36 @@ import SwiftUI
 
 /// a UIScrollView Wrapper for SwiftUI
 public struct LegacyScrollView<Content: View>: UIViewRepresentable {
+
     let axis: Axis
     let showsIndicators: Bool
     var content: Content
     let uiScrollView: LegacyUIScrollView
 
-    // MARK: - Callbacks
-    var onGestureShouldBegin: ((_ gestureRecognizer: UIPanGestureRecognizer, _ scrollView: UIScrollView) -> Bool)?
-    var onScroll: ((UIScrollView) -> Void)?
+    // MARK: - UIScrollView Callbacks
+    internal var onGestureShouldBegin: ((_ gestureRecognizer: UIPanGestureRecognizer, _ scrollView: UIScrollView) -> Bool)?
+
+    // MARK: - Delegate callbacks
+    internal var onScroll: ((UIScrollView) -> Void)?
+    internal var onReachBottom: ((UIScrollView) -> Void)?
+    internal var onReachTop: ((UIScrollView) -> Void)?
+    internal var onEndDecelerating: ((UIScrollView) -> Void)?
+    internal var onEndDragging: ((UIScrollView) -> Void)?
 
     public func makeCoordinator() -> LegacyScrollViewCoordinator<Content> {
         LegacyScrollViewCoordinator(self)
     }
 
     public func makeUIView(context: Context) -> UIScrollView {
-        uiScrollView.delegate = context.coordinator
         uiScrollView.onGestureShouldBegin = onGestureShouldBegin
-        
+        context.coordinator.onScroll = onScroll
+        context.coordinator.onReachTop = onReachTop
+        context.coordinator.onReachBottom = onReachBottom
+        context.coordinator.onEndDragging = onEndDragging
+        context.coordinator.onEndDecelerating = onEndDecelerating
+
+        uiScrollView.delegate = context.coordinator
+
         return uiScrollView
     }
 
@@ -35,8 +48,7 @@ public struct LegacyScrollView<Content: View>: UIViewRepresentable {
     }
 
     public init(_ axis: Axis, showsIndicators: Bool = true, @ViewBuilder content: () -> Content) {
-        self.init(axis: axis, showsIndicators: showsIndicators,
-                  content: content(), uiScrollView: LegacyUIScrollView())
+        self.init(axis: axis, showsIndicators: showsIndicators, content: content())
 
         uiScrollView.showsVerticalScrollIndicator = axis == .vertical && showsIndicators
         uiScrollView.showsHorizontalScrollIndicator = axis == .horizontal && showsIndicators
@@ -71,8 +83,12 @@ public struct LegacyScrollView<Content: View>: UIViewRepresentable {
 
 struct LegacyScrollView_Previews: PreviewProvider {
     static var previews: some View {
-        LegacyScrollView(.horizontal, showsIndicators: true) {
-            Text("test")
+        LegacyScrollView(.vertical, showsIndicators: true) {
+            VStack {
+                ForEach(0..<100) {
+                    Text("item \($0)")
+                }
+            }
         }
     }
 }
