@@ -69,9 +69,11 @@ public class LegacyUIScrollView: UIScrollView {
     }()
 
     func updateView() {
+        NSLayoutConstraint.deactivate(contentConstraints)
         contentView.removeFromSuperview()
         addSubview(contentView)
         contentSize = contentView.sizeThatFits(.greatest)
+        NSLayoutConstraint.activate(contentConstraints)
     }
 }
 
