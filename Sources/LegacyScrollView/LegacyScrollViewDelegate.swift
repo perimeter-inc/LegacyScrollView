@@ -32,10 +32,14 @@ public class LegacyScrollViewCoordinator<Content: View>: NSObject, UIScrollViewD
 
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         onEndDecelerating?(scrollView)
+        callReachBottomIfNeeded(scrollView)
     }
 
     public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         onEndDragging?(scrollView)
+    }
+
+    private func callReachBottomIfNeeded(_ scrollView: UIScrollView) {
         if (scrollView.contentOffset.y >= (scrollView.contentSize.height - scrollView.frame.size.height)) {
             onReachBottom?(scrollView)
         }

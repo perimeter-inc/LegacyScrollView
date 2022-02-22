@@ -13,8 +13,7 @@ public struct LegacyScrollView<Content: View>: UIViewRepresentable {
 
     let axis: Axis
     let showsIndicators: Bool
-    var content: Content
-    let uiScrollView: LegacyUIScrollView
+    var content: () -> Content
 
     // MARK: - UIScrollView Callbacks
     internal var onGestureShouldBegin: ((_ gestureRecognizer: UIPanGestureRecognizer, _ scrollView: UIScrollView) -> Bool)?
@@ -27,57 +26,37 @@ public struct LegacyScrollView<Content: View>: UIViewRepresentable {
     internal var onEndDragging: ((UIScrollView) -> Void)?
 
     public func makeCoordinator() -> LegacyScrollViewCoordinator<Content> {
-        LegacyScrollViewCoordinator(self)
+        let ans = LegacyScrollViewCoordinator(self)
+        ans.onScroll = onScroll
+        ans.onReachTop = onReachTop
+        ans.onReachBottom = onReachBottom
+        ans.onEndDragging = onEndDragging
+        ans.onEndDecelerating = onEndDecelerating
+        print("makeCoordinator")
+        return ans
     }
 
-    public func makeUIView(context: Context) -> UIScrollView {
-        uiScrollView.onGestureShouldBegin = onGestureShouldBegin
-        context.coordinator.onScroll = onScroll
-        context.coordinator.onReachTop = onReachTop
-        context.coordinator.onReachBottom = onReachBottom
-        context.coordinator.onEndDragging = onEndDragging
-        context.coordinator.onEndDecelerating = onEndDecelerating
+    public func makeUIView(context: Context) -> LegacyUIScrollView {
+        let ans = LegacyUIScrollView(axis: axis)
 
-        uiScrollView.delegate = context.coordinator
+        ans.onGestureShouldBegin = onGestureShouldBegin
+        ans.delegate = context.coordinator
+        ans.showsVerticalScrollIndicator = axis == .vertical && showsIndicators
+        ans.showsHorizontalScrollIndicator = axis == .horizontal && showsIndicators
 
-        return uiScrollView
+        return ans
     }
 
-    public func updateUIView(_ uiView: UIScrollView, context: Context) {
+    public func updateUIView(_ view: LegacyUIScrollView, context: Context) {
+        let contentView = content()
 
-    }
-
-    public init(_ axis: Axis, showsIndicators: Bool = true, @ViewBuilder content: () -> Content) {
-        self.init(axis: axis, showsIndicators: showsIndicators, content: content())
-
-        uiScrollView.showsVerticalScrollIndicator = axis == .vertical && showsIndicators
-        uiScrollView.showsHorizontalScrollIndicator = axis == .horizontal && showsIndicators
-
-        let hosting = UIHostingController(rootView: content())
-        hosting.view.translatesAutoresizingMaskIntoConstraints = false
-
-        self.uiScrollView.addSubview(hosting.view)
-
-        let constraints: [NSLayoutConstraint]
-        switch self.axis {
-        case .horizontal:
-            constraints = [
-                hosting.view.leadingAnchor.constraint(equalTo: self.uiScrollView.contentLayoutGuide.leadingAnchor),
-                hosting.view.trailingAnchor.constraint(equalTo: self.uiScrollView.contentLayoutGuide.trailingAnchor),
-                hosting.view.topAnchor.constraint(equalTo: self.uiScrollView.topAnchor),
-                hosting.view.bottomAnchor.constraint(equalTo: self.uiScrollView.bottomAnchor),
-                hosting.view.heightAnchor.constraint(equalTo: self.uiScrollView.heightAnchor)
-            ]
-        case .vertical:
-            constraints = [
-                hosting.view.leadingAnchor.constraint(equalTo: self.uiScrollView.leadingAnchor),
-                hosting.view.trailingAnchor.constraint(equalTo: self.uiScrollView.trailingAnchor),
-                hosting.view.topAnchor.constraint(equalTo: self.uiScrollView.contentLayoutGuide.topAnchor),
-                hosting.view.bottomAnchor.constraint(equalTo: self.uiScrollView.contentLayoutGuide.bottomAnchor),
-                hosting.view.widthAnchor.constraint(equalTo: self.uiScrollView.widthAnchor)
-            ]
+        guard let hosting = view.contentViewController as? UIHostingController<Content> else {
+            view.contentViewController = UIHostingController(rootView: contentView)
+            return
         }
-        self.uiScrollView.addConstraints(constraints)
+
+        hosting.rootView = contentView
+        view.updateView()
     }
 }
 
@@ -89,6 +68,8 @@ struct LegacyScrollView_Previews: PreviewProvider {
                     Text("item \($0)")
                 }
             }
+        }.onGestureShouldBegin { pan, scroll -> Bool in
+            true
         }
     }
 }

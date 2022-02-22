@@ -9,7 +9,7 @@ A legacy UIScrollView wrapper for SwiftUI.
 Add a dependency in your your `Package.swift`
 
 ```swift
-    .package(name: "LegacyScrollView", url: "https://github.com/bwide/LegacyScrollView", from: "0.1.0")
+    .package(name: "LegacyScrollView", url: "https://github.com/bwide/LegacyScrollView", from: "1.0.0")
 ```
 
 
@@ -19,10 +19,28 @@ Add a dependency in your your `Package.swift`
             LegacyScrollView(.vertical, showsIndicators: true) {
                 content
             }
-            .onDragShouldBegin { pan, scrollView in
-                return pan.translation(in: scrollView).y > 0
+            .onGestureShouldBegin { pan, scrollView in
+                pan.translation(in: scrollView).y > 0
             }
             .onScroll { scrollView in
                 print(scrollView.contentOffset.y)
             }
+```
+
+## Modifiers:
+
+with this package you'll have access to these UIScrollView delegate callbacks
+
+```swift
+    .onScroll { scrollView in }
+    .onReachBottom { scrollView in }
+    .onReachTop { scrollView in }
+    .onEndDecelerating { scrollView in }
+    .onEndDragging { scrollView in }
+```
+
+and this UIScrollViewOverride
+
+```swift
+    .onGestureShouldBegin { panGesture, scrollView -> Bool in }
 ```
