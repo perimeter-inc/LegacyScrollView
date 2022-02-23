@@ -72,7 +72,12 @@ public class LegacyUIScrollView: UIScrollView {
         NSLayoutConstraint.deactivate(contentConstraints)
         contentView.removeFromSuperview()
         addSubview(contentView)
-        contentSize = contentView.sizeThatFits(.greatest)
+        if axis == .vertical {
+            contentSize.height = contentView.sizeThatFits(.greatest).height
+        } else {
+            contentSize.width = contentView.sizeThatFits(.greatest).width
+        }
+
         NSLayoutConstraint.activate(contentConstraints)
     }
 }
