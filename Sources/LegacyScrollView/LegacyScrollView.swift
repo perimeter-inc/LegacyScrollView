@@ -13,7 +13,7 @@ public struct LegacyScrollView<Content: View>: UIViewRepresentable {
 
     let axis: Axis
     let showsIndicators: Bool
-    var content: () -> Content
+    var content: (LegacyScrollViewProxy) -> Content
 
     // MARK: - UIScrollView Callbacks
     internal var onGestureShouldBegin: ((_ gestureRecognizer: UIPanGestureRecognizer, _ scrollView: UIScrollView) -> Bool)?
@@ -32,7 +32,6 @@ public struct LegacyScrollView<Content: View>: UIViewRepresentable {
         ans.onReachBottom = onReachBottom
         ans.onEndDragging = onEndDragging
         ans.onEndDecelerating = onEndDecelerating
-        print("makeCoordinator")
         return ans
     }
 
@@ -48,8 +47,9 @@ public struct LegacyScrollView<Content: View>: UIViewRepresentable {
     }
 
     public func updateUIView(_ view: LegacyUIScrollView, context: Context) {
-        let contentView = content()
-
+        let proxy = makeProxy(with: view)
+        let contentView = content(proxy)
+        
         guard let hosting = view.contentViewController as? UIHostingController<Content> else {
             view.contentViewController = UIHostingController(rootView: contentView)
             return
@@ -62,7 +62,7 @@ public struct LegacyScrollView<Content: View>: UIViewRepresentable {
 
 struct LegacyScrollView_Previews: PreviewProvider {
     static var previews: some View {
-        LegacyScrollView(.vertical, showsIndicators: true) {
+        LegacyScrollView(.vertical, showsIndicators: true) { _ in 
             VStack {
                 ForEach(0..<100) {
                     Text("item \($0)")

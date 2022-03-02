@@ -35,6 +35,7 @@ public class LegacyUIScrollView: UIScrollView {
     // MARK: - SwiftUI updates
 
     var contentViewController: UIViewController! {
+        willSet { assert(contentViewController == nil, "you should only set this once") }
         didSet { attach() }
     }
 
