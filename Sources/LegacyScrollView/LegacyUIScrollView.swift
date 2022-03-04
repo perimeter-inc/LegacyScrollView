@@ -11,6 +11,8 @@ import SwiftUI
 
 public class LegacyUIScrollView: UIScrollView {
 
+    static let viewTag = 3124123
+
     let axis: Axis
 
     init(axis: Axis) {
@@ -49,6 +51,8 @@ public class LegacyUIScrollView: UIScrollView {
             return
         }
 
+        tag = LegacyUIScrollView.viewTag
+        backgroundColor = .clear
         addSubview(contentView)
         contentView.sizeToFit()
         contentView.translatesAutoresizingMaskIntoConstraints = false

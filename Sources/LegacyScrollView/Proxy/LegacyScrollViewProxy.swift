@@ -10,41 +10,71 @@ import SwiftUI
 
 public struct LegacyScrollViewProxy {
 
-    internal var performScrollToPoint: ((_ point: CGPoint) -> Void)?
+    internal var getScrollView: () -> UIScrollView
+    internal var getRectOfContent: (_ id: Int) -> CGRect?
+    internal var performScrollToPoint: (_ point: CGPoint) -> Void
+    internal var performScrollToId: (_ id: Int, _ anchor: UnitPoint) -> Void
+    internal var performScrollToIdIfNeeded: (_ id: Int, _ anchor: UnitPoint) -> Void
+
+    public var scrollView: UIScrollView { getScrollView() }
+
+    public func rectOfContent<ID: Hashable>(id: ID) -> CGRect? {
+        getRectOfContent(id.hashValue)
+    }
 
     public func scrollTo(point: UnitPoint) {
-        performScrollToPoint?(CGPoint(x: point.x, y: point.y))
+        performScrollToPoint(CGPoint(x: point.x, y: point.y))
     }
 
-}
-
-extension LegacyScrollView {
-    func makeProxy(with view: LegacyUIScrollView) -> LegacyScrollViewProxy {
-        var proxy = LegacyScrollViewProxy()
-
-        proxy.performScrollToPoint = { performScrollTo(point: $0, in: view) }
-
-        return proxy
+    public func scrollTo<ID: Hashable>(_ id: ID, anchor: UnitPoint = .top) {
+        performScrollToId(id.hashValue, anchor)
     }
 
-    private func performScrollTo(point: CGPoint, in view: LegacyUIScrollView) {
-        view.setContentOffset(point, animated: true)
+    public func scrollToIdIfNeeded<ID: Hashable>(_ id: ID, anchor: UnitPoint = .top) {
+        performScrollToIdIfNeeded(id.hashValue, anchor)
     }
 }
 
-extension UIViewController {
-    func allChildren<T: UIViewController>() -> [T] {
-        var ans: [T] = []
-
-        for child in children {
-            ans += child.allChildren() as [T]
-
-            if let x = child as? T {
-                ans.append(x)
-            }
+extension LegacyScrollViewReader {
+    func makeProxy(with view: LegacyUIScrollViewReader) -> LegacyScrollViewProxy {
+        LegacyScrollViewProxy {
+            view.scrollView!
+        } getRectOfContent: { id in
+            getRectOfContent(with: id, in: view)
+        } performScrollToPoint: { point in
+            performScrollTo(point: point, in: view)
+        } performScrollToId: { id, anchor in
+            performScrollTo(id, anchor: anchor, in: view)
+        } performScrollToIdIfNeeded: { id, anchor in
+            performScrollToIdIfNeeded(id, anchor: anchor, in: view)
         }
+    }
 
-        return ans
+    private func getRectOfContent(with id: Int, in view: LegacyUIScrollViewReader) -> CGRect? {
+        guard
+            let foundView = view.scrollView?.allSubviews.first(where: { $0.tag == id })?.superview
+        else { return nil }
+
+        return foundView.frame
+    }
+
+    private func performScrollTo(point: CGPoint, in view: LegacyUIScrollViewReader) {
+        view.scrollView?.setContentOffset(point, animated: true)
+    }
+
+    public func performScrollTo(_ id: Int, anchor: UnitPoint = .top, in view: LegacyUIScrollViewReader) {
+        guard let contentFrame = getRectOfContent(with: id, in: view) else { return }
+
+        view.scrollView?.setContentOffset(contentFrame.origin, animated: true)
+    }
+
+    public func performScrollToIdIfNeeded(_ id: Int, anchor: UnitPoint = .top, in view: LegacyUIScrollViewReader) {
+        guard
+            let contentFrame = getRectOfContent(with: id, in: view),
+            !(view.scrollView?.visibleRect ?? CGRect.null).contains(contentFrame)
+        else { return }
+
+        view.scrollView?.setContentOffset(contentFrame.origin, animated: true)
     }
 }
 
@@ -59,17 +89,10 @@ extension UIView {
 
         return ans
     }
+}
 
-    var allSubLayers: [CALayer] {
-        var ans: [CALayer] = []
-
-        for view in subviews {
-            for layer in view.layer.sublayers ?? [] {
-                ans.append(layer)
-            }
-            ans += view.allSubLayers
-        }
-
-        return ans
+public extension UIScrollView {
+    var visibleRect: CGRect {
+        CGRect(origin: contentOffset, size: visibleSize)
     }
 }
