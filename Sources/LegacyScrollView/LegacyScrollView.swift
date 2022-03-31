@@ -42,6 +42,7 @@ public struct LegacyScrollView<Content: View>: UIViewRepresentable {
         ans.delegate = context.coordinator
         ans.showsVerticalScrollIndicator = axis == .vertical && showsIndicators
         ans.showsHorizontalScrollIndicator = axis == .horizontal && showsIndicators
+        ans.setContentOffset(.zero, animated: false)
 
         return ans
     }
