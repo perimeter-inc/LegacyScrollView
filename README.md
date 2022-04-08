@@ -9,7 +9,7 @@ A legacy UIScrollView wrapper for SwiftUI.
 Add a dependency in your your `Package.swift`
 
 ```swift
-    .package(name: "LegacyScrollView", url: "https://github.com/bwide/LegacyScrollView", from: "1.0.0")
+    .package(name: "LegacyScrollView", url: "https://github.com/perimeter-inc/LegacyScrollView", from: "2.0.1")
 ```
 
 
