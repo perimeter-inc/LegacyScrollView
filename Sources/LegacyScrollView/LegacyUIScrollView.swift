@@ -84,6 +84,7 @@ public class LegacyUIScrollView: UIScrollView {
         }
 
         NSLayoutConstraint.activate(contentConstraints)
+        contentView.sizeToFit()
     }
 }
 
