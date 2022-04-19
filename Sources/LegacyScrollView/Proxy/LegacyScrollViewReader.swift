@@ -42,9 +42,12 @@ struct LegacyScrollViewReader_Previews: PreviewProvider {
                 VStack {
                     ForEach(0..<500) {
                         Text("item \($0)")
-                            .id($0)
+                            .legacyId($0)
                     }
                 }
+            }
+            .onAppear {
+                proxy.scrollToIdIfNeeded(300)
             }
         }
     }
