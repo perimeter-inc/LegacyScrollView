@@ -12,8 +12,8 @@ public struct LegacyScrollViewProxy {
 
     internal var getScrollView: () -> UIScrollView
     internal var getRectOfContent: (_ id: Int) -> CGRect?
-    internal var performScrollToPoint: (_ point: CGPoint) -> Void
-    internal var performScrollToId: (_ id: Int, _ anchor: UnitPoint) -> Void
+    internal var performScrollToPoint: (_ point: CGPoint, _ animated: Bool) -> Void
+    internal var performScrollToId: (_ id: Int, _ anchor: UnitPoint, _ animated: Bool) -> Void
     internal var performScrollToIdIfNeeded: (_ id: Int, _ anchor: UnitPoint) -> Void
 
     /// Returns the UIScrollView
@@ -21,9 +21,9 @@ public struct LegacyScrollViewProxy {
     /// returns the content's CGRect
     public func rectOfContent<ID: Hashable>(id: ID) -> CGRect? { getRectOfContent(id.hashValue) }
     /// performs a scroll to a specific `CGPoint`
-    public func scrollTo(point: UnitPoint) { performScrollToPoint(CGPoint(x: point.x, y: point.y)) }
+    public func scrollTo(point: UnitPoint, animated: Bool = true) { performScrollToPoint(CGPoint(x: point.x, y: point.y), animated) }
     /// performs a scroll to an item with set `legacyID`
-    public func scrollTo<ID: Hashable>(_ id: ID, anchor: UnitPoint = .top) { performScrollToId(id.hashValue, anchor) }
+    public func scrollTo<ID: Hashable>(_ id: ID, anchor: UnitPoint = .top, animated: Bool = true) { performScrollToId(id.hashValue, anchor, animated) }
     /// performs a scroll to an item with set `legacyID` if the item is out of the visible rect
     public func scrollToIdIfNeeded<ID: Hashable>(_ id: ID, anchor: UnitPoint = .top) { performScrollToIdIfNeeded(id.hashValue, anchor) }
 }
@@ -34,10 +34,10 @@ extension LegacyScrollViewReader {
             view.scrollView!
         } getRectOfContent: { id in
             getRectOfContent(with: id, in: view)
-        } performScrollToPoint: { point in
-            performScrollTo(point: point, in: view)
-        } performScrollToId: { id, anchor in
-            performScrollTo(id, anchor: anchor, in: view)
+        } performScrollToPoint: { point, animated in
+            performScrollTo(point: point, animated: animated, in: view)
+        } performScrollToId: { id, anchor, animated in
+            performScrollTo(id, anchor: anchor, animated: animated, in: view)
         } performScrollToIdIfNeeded: { id, anchor in
             performScrollToIdIfNeeded(id, anchor: anchor, in: view)
         }
@@ -51,14 +51,14 @@ extension LegacyScrollViewReader {
         return foundView.frame
     }
 
-    private func performScrollTo(point: CGPoint, in view: LegacyUIScrollViewReader) {
-        view.scrollView?.setContentOffset(point, animated: true)
+    private func performScrollTo(point: CGPoint, animated: Bool, in view: LegacyUIScrollViewReader) {
+        view.scrollView?.setContentOffset(point, animated: animated)
     }
 
-    public func performScrollTo(_ id: Int, anchor: UnitPoint = .top, in view: LegacyUIScrollViewReader) {
+    public func performScrollTo(_ id: Int, anchor: UnitPoint = .top, animated: Bool, in view: LegacyUIScrollViewReader) {
         guard let contentFrame = getRectOfContent(with: id, in: view) else { return }
 
-        view.scrollView?.setContentOffset(contentFrame.origin, animated: true)
+        view.scrollView?.setContentOffset(contentFrame.origin, animated: animated)
     }
 
     public func performScrollToIdIfNeeded(_ id: Int, anchor: UnitPoint = .top, in view: LegacyUIScrollViewReader) {

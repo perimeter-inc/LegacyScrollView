@@ -53,6 +53,7 @@ public class LegacyUIScrollView: UIScrollView {
 
         tag = LegacyUIScrollView.viewTag
         backgroundColor = .clear
+        contentView.backgroundColor = .clear
         addSubview(contentView)
         contentView.sizeToFit()
         contentView.translatesAutoresizingMaskIntoConstraints = false
